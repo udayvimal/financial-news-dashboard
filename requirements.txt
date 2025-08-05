@@ -1,0 +1,10 @@
+streamlit
+pandas
+matplotlib
+seaborn
+
+langchain
+langchain-community
+langchain-huggingface
+python-dotenv
+faiss-cpu
