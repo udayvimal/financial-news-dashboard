@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from src.llm_helpers import load_data, generate_insight
 
-st.set_page_config(page_title="Financial News Dashboard with AI Insights", layout="wide")
+st.set_page_config(page_title="FinSight AI", layout="wide")
+st.title("📊 FinSight AI")
 
 # --- Your branding/label ---
 st.markdown(
