@@ -4,21 +4,51 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from src.llm_helpers import load_data, generate_insight
 
-st.set_page_config(page_title="FinSight AI", layout="wide")
-st.title("📊 FinSight AI")
+
+# --- Enhanced dark mode for all charts with better quality ---
+plt.style.use('dark_background')
+sns.set_theme(
+    style="darkgrid",
+    rc={
+        "axes.facecolor": "black",
+        "figure.facecolor": "black",
+        "axes.labelcolor": "white",
+        "xtick.color": "white",
+        "ytick.color": "white",
+        "grid.color": "#444444",
+        "text.color": "white",
+        "axes.edgecolor": "white",
+        "legend.facecolor": "#181826",
+        "legend.edgecolor": "white",
+        "axes.titlesize": 19,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+        "font.size": 15,
+        "lines.linewidth": 2.2,
+        "figure.dpi": 175,          # Higher resolution (for Streamlit rendering)
+        "savefig.dpi": 240
+    }
+)
+
+st.set_page_config(page_title="Finlytics AI", layout="wide")
+st.title("📊 Finlytics AI")
+st.markdown("### AI-Powered Financial News & Analysis Dashboard")
+
 
 # --- Your branding/label ---
 st.markdown(
     """
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <h1 style='margin-bottom:0;'>📊 Financial News Dashboard with AI Insights</h1>
-      <div style='font-size:1.1em; text-align:right'>
+      <h1 style='margin-bottom:0;font-size:2.0rem;'> Financial News Dashboard with AI Insights</h1>
+      <div style='font-size:1.12em; text-align:right'>
         Crafted by <a href="https://www.linkedin.com/in/udayvimal" target="_blank" style="color:#1589FF;font-weight:bold;text-decoration:none;">udayvimal</a>
       </div>
     </div>
     """, unsafe_allow_html=True
 )
-st.info("ℹ️ Use the sidebar to change filters and generate charts. If no chart appears, adjust your selections so there's enough data.")
+
+st.info("ℹ️ Use the sidebar to select filters and generate charts. If no chart appears, adjust your selections for sufficient data.")
 
 df = load_data()
 
@@ -26,23 +56,39 @@ left, right = st.columns([1, 2])
 
 with right:
     st.header("📈 Dashboard")
-    st.sidebar.header("Filter Options")
 
-    min_date, max_date = df['date'].min(), df['date'].max()
-    start_date, end_date = st.sidebar.date_input(
-        "Select Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date
-    )
-    sectors = df['sector'].unique().tolist()
-    selected_sectors = st.sidebar.multiselect("Select Sector(s)", options=sectors, default=sectors)
-    sentiments = df['sentiment'].unique().tolist()
-    selected_sentiments = st.sidebar.multiselect("Select Sentiment(s)", options=sentiments, default=sentiments)
+    with st.sidebar:
+        st.header("Filter Options")
+        min_date, max_date = df['date'].min(), df['date'].max()
+        start_date, end_date = st.date_input(
+            "Select Date Range",
+            value=(min_date, max_date), min_value=min_date, max_value=max_date
+        )
 
-    filtered_df = df[
-        (df['date'] >= pd.to_datetime(start_date)) &
-        (df['date'] <= pd.to_datetime(end_date)) &
-        (df['sector'].isin(selected_sectors)) &
-        (df['sentiment'].isin(selected_sentiments))
-    ]
+        sectors = df['sector'].unique().tolist()
+        sentiments = df['sentiment'].unique().tolist()
+
+        # Start with no default selection, user selects at least one
+        selected_sectors = st.multiselect(
+            "Select Sector(s)", options=sectors,
+            default=[]
+        )
+        selected_sentiments = st.multiselect(
+            "Select Sentiment(s)", options=sentiments,
+            default=[]
+        )
+
+    # If user hasn't selected sectors or sentiments - empty dataframe
+    if not selected_sectors or not selected_sentiments:
+        filtered_df = pd.DataFrame()  # empty df
+    else:
+        filtered_df = df[
+            (df['date'] >= pd.to_datetime(start_date)) &
+            (df['date'] <= pd.to_datetime(end_date)) &
+            (df['sector'].isin(selected_sectors)) &
+            (df['sentiment'].isin(selected_sentiments))
+        ]
+
     st.markdown(f"### Displaying {len(filtered_df)} records after filtering")
 
     dashboard_options = [
@@ -53,26 +99,41 @@ with right:
     ]
     selected_dashboard = st.selectbox("Select Dashboard View", options=dashboard_options)
 
-    # Edge-case message if nothing to show
+    def darkize_ax(ax):
+        ax.tick_params(colors="white", which="both")
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.title.set_color('white')
+        plt.setp(ax.get_xticklabels(), color="white")
+        plt.setp(ax.get_yticklabels(), color="white")
+        for spine in ax.spines.values():
+            spine.set_edgecolor("white")
+        legend = ax.get_legend()
+        if legend:
+            for text in legend.get_texts():
+                text.set_color('white')
+            legend.get_frame().set_edgecolor('white')
+            legend.get_frame().set_facecolor('#181826')
+
     if filtered_df.empty:
-        st.warning("No data available for these filters. Please adjust filters in the sidebar to see insights and charts.")
+        st.warning("No data available for selected filters. Please select at least one sector and one sentiment in the sidebar.")
     else:
-        # --- Main Chart (centerpiece) ---
         try:
             if selected_dashboard == "Price Change Over Time":
                 if filtered_df['sector'].nunique() < 1 or filtered_df['date'].nunique() < 2:
                     st.info("Not enough data to plot trends. Try broadening your selection.")
                 else:
                     st.subheader("Price Change Over Time")
-                    fig, ax = plt.subplots(figsize=(12, 6))
-                    sns.lineplot(data=filtered_df, x='date', y='price_change', hue='sector', marker="o", ax=ax)
+                    fig, ax = plt.subplots(figsize=(13, 6))
+                    sns.lineplot(data=filtered_df, x='date', y='price_change', hue='sector', marker="o", ax=ax, linewidth=2.5)
                     ax.set_ylabel("Price Change (%)")
                     ax.set_xlabel("Date")
                     ax.set_title("Price Change Trends by Sector")
-                    ax.legend(title="Sector", bbox_to_anchor=(1.05, 1), loc='upper left')
+                    darkize_ax(ax)
                     plt.xticks(rotation=45)
                     st.pyplot(fig)
                     plt.clf()
+
             elif selected_dashboard == "Trading Volume by Sector":
                 if filtered_df['sector'].nunique() < 1:
                     st.info("Not enough sectors for a trading volume chart. Try more sectors.")
@@ -83,8 +144,10 @@ with right:
                     volume_by_sector.plot(kind='bar', ax=ax)
                     ax.set_ylabel("Trading Volume (cr)")
                     ax.set_title("Trading Volume by Sector")
+                    darkize_ax(ax)
                     st.pyplot(fig)
                     plt.clf()
+
             elif selected_dashboard == "Sentiment Distribution":
                 if filtered_df['sentiment'].nunique() < 1:
                     st.info("No sentiment data to display.")
@@ -95,8 +158,10 @@ with right:
                     sentiment_counts.plot(kind='bar', ax=ax)
                     ax.set_ylabel("Count")
                     ax.set_title("Sentiment Distribution")
+                    darkize_ax(ax)
                     st.pyplot(fig)
                     plt.clf()
+
             elif selected_dashboard == "Emotion Trends Over Time":
                 if filtered_df['emotion'].nunique() < 1 or filtered_df['date'].nunique() < 2:
                     st.info("Not enough emotion data to plot trends.")
@@ -109,7 +174,7 @@ with right:
                     ax.set_xlabel("Date")
                     ax.set_title("Emotions Over Time")
                     plt.xticks(rotation=45)
-                    ax.legend(title="Emotion", bbox_to_anchor=(1.05, 1), loc='upper left')
+                    darkize_ax(ax)
                     st.pyplot(fig)
                     plt.clf()
         except Exception as e:
@@ -121,7 +186,7 @@ with right:
             total_records = len(filtered_df)
             avg_price_change = filtered_df.groupby('sector')['price_change'].mean().sort_values(ascending=False)
             top_volume = filtered_df.groupby('sector')['trading_volume_crore'].sum().sort_values(ascending=False).head(3)
-            # Safe values for summary
+
             def get_top(top_vol, idx):
                 if len(top_vol) > idx:
                     s = top_vol.index[idx]
@@ -152,7 +217,7 @@ with right:
                     st.markdown("- Others: " + ", ".join([f"{k}: {v}" for k, v in sentiment_counts.items() if k != most_common]))
                 else:
                     st.markdown("_No sentiment data in filter._")
-            # --- Per-sector avg price change (with safety) ---
+
             avg_by_selected = filtered_df.groupby('sector')['price_change'].mean().reindex(selected_sectors).dropna()
             if not avg_by_selected.empty:
                 st.markdown("#### Avg. Price Change per Selected Sector")
@@ -164,29 +229,20 @@ with right:
             else:
                 st.markdown("_No sectors selected or no data to compute price change._")
 
+
 with left:
     st.header("💬 Analyst AI Chatbot")
+
     if filtered_df.empty:
         st.info("Adjust filters on the right to unlock analysis.")
     else:
-        if "chat_history" not in st.session_state:
-            st.session_state.chat_history = []
         user_question = st.text_input("Ask your question:", key="user_input")
         if st.button("Ask Analyst AI"):
             if not user_question.strip():
                 st.warning("Please type a question!")
             else:
-                with st.spinner("The analyst is thinking..."):
-                    answer, sources = generate_insight(
-                        user_question, filtered_df, st.session_state.chat_history
-                    )
-                    st.session_state.chat_history.append(
-                        {"question": user_question, "answer": answer}
-                    )
-                st.session_state['last_input'] = user_question
-
-        st.markdown("---")
-        st.markdown("#### Analyst Chat History")
-        for chat in reversed(st.session_state.chat_history[-6:]):  # Show last 6 messages
-            st.markdown(f"<div style='margin-bottom:3px'><b>You:</b> {chat['question']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='background-color:#181826;padding:8px;border-radius:7px;margin-bottom:10px'><b>Analyst:</b> {chat['answer']}</div>", unsafe_allow_html=True)
+                # Directly call generate_insight without chat history or spinner for faster response
+                answer, sources = generate_insight(user_question, filtered_df, [])
+                
+                st.markdown("### Overview & Recommendations")
+                st.markdown(answer)
