@@ -115,9 +115,7 @@ env/
 data/
 data/**
 
-# Vectorstore or other large binary data
-vectorstore/
-vectorstore/**
+
 
 # VS Code files
 .vscode/
