@@ -6,5 +6,12 @@ seaborn
 langchain
 langchain-community
 langchain-huggingface
+
 python-dotenv
+
 faiss-cpu
+
+huggingface-hub
+transformers
+sentence-transformers
+torch
