@@ -1,17 +1,24 @@
+# Web app and UI
 streamlit
+
+# Data processing and visualization
 pandas
 matplotlib
 seaborn
 
+# Environment variable handling
+python-dotenv
+
+# Langchain core and community extensions
 langchain
 langchain-community
 langchain-huggingface
 
-python-dotenv
-
-faiss-cpu
-
+# HuggingFace model dependencies
 huggingface-hub
 transformers
 sentence-transformers
 torch
+
+# Vector search
+faiss-cpu
