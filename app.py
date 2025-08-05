@@ -4,37 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from src.llm_helpers import load_data, generate_insight
 
-
-# --- Enhanced dark mode for all charts with better quality ---
-plt.style.use('dark_background')
-sns.set_theme(
-    style="darkgrid",
-    rc={
-        "axes.facecolor": "black",
-        "figure.facecolor": "black",
-        "axes.labelcolor": "white",
-        "xtick.color": "white",
-        "ytick.color": "white",
-        "grid.color": "#444444",
-        "text.color": "white",
-        "axes.edgecolor": "white",
-        "legend.facecolor": "#181826",
-        "legend.edgecolor": "white",
-        "axes.titlesize": 19,
-        "axes.labelsize": 16,
-        "xtick.labelsize": 13,
-        "ytick.labelsize": 13,
-        "font.size": 15,
-        "lines.linewidth": 2.2,
-        "figure.dpi": 175,          # Higher resolution (for Streamlit rendering)
-        "savefig.dpi": 240
-    }
-)
-
-st.set_page_config(page_title="Finlytics AI", layout="wide")
-st.title("📊 Finlytics AI")
-st.markdown("### AI-Powered Financial News & Analysis Dashboard")
-
+st.set_page_config(page_title="Financial News Dashboard with AI Insights", layout="wide")
 
 # --- Your branding/label ---
 st.markdown(
